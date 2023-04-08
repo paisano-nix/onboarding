@@ -1,0 +1,144 @@
+#! /usr/bin/env bash
+#
+# A good old bash script to get you going with "${package}"
+#
+
+set -euo pipefail
+
+owner="${OWNER:-paisano-nix}"
+repo="${REPO:-tui}"
+package="${PACKAGE:-paisano}"
+
+{ # Prevent execution if this script was only partially downloaded
+
+  log() {
+    echo "[${package} installer] $*" >&2
+  }
+
+  if ! command -v nix &>/dev/null; then
+    log Nix not found - installing ...
+    sh <(curl -L https://nixos.org/nix/install) --no-daemon
+  fi
+
+  if ! command -v ${package} &>/dev/null; then
+    log "${package}" not found - installing ...
+    nix \
+      --experimental-feature nix-command \
+      --experimental-feature flakes \
+      profile install "github:${owner}/${repo}#${package}"
+  fi
+
+  if ! command -v direnv &>/dev/null; then
+    log Direnv not found - installing ...
+    nix \
+      --experimental-feature nix-command \
+      --experimental-feature flakes \
+      profile install "nixpkgs#direnv"
+  fi
+
+  if ! grep 'experimental-features' ~/.config/nix/nix.conf &>/dev/null; then
+    log Enable required experimental features in Nix ...
+    cat >>~/.config/nix/nix.conf <<<"experimental-features = nix-command flakes"
+  else
+    if ! grep 'experimental-features' ~/.config/nix/nix.conf | grep 'nix-command' &>/dev/null; then
+      log Enable required experimental feature 'nix-command' in Nix ...
+      sed -i 's|experimental-features =|experimental-features = nix-command|g' ~/.config/nix/nix.conf
+    fi
+
+    if ! grep 'experimental-features' ~/.config/nix/nix.conf | grep 'flakes' &>/dev/null; then
+      log Enable required experimental feature 'flakes' in Nix ...
+      sed -i 's|experimental-features =|experimental-features = flakes|g' ~/.config/nix/nix.conf
+    fi
+  fi
+
+  if ! grep 'netrc-file' ~/.config/nix/nix.conf; then
+    log Populate netrc file to access private repos ...
+    log Please enter your github user name:
+    read -rp 'GH User(handle): ' ghuser
+    log Please enter your github user name:
+    read -rsp 'GH Private Access Token: ' ghpat
+    cat >>~/.netrc <<<"machine github.com login ${ghuser} password ${ghpat}"
+    cat >>~/.netrc <<<"machine api.github.com login ${ghuser} password ${ghpat}"
+    cat >>~/.config/nix/nix.conf <<<"netrc-file = ${HOME}/.netrc)"
+  else
+    log Netrc file configured please validate ...
+    log Config: "$(grep 'netrc-file' ~/.config/nix/nix.conf)"
+  fi
+
+  SHELLNAME="$(basename "${SHELL}")"
+
+  case $SHELLNAME in
+  bash)
+    RC_CANDIDATE="${HOME}/.${SHELLNAME}rc"
+    if [[ -f ${RC_CANDIDATE} ]]; then
+      log Setting up shell hooks and reloading shell ...
+      cat >>"${RC_CANDIDATE}" <<<"source <(${package} _carapace) # ${package}-installer"
+      cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
+      tail -2 "${RC_CANDIDATE}"
+      exec $SHELL
+    fi
+    log Please setup the following shell hooks:
+    log "source <(${package} _carapace)"
+    log "eval \"\$(direnv hook ${SHELLNAME})\""
+    ;;
+  oil)
+    RC_CANDIDATE="${HOME}/.${SHELLNAME}rc"
+    if [[ -f ${RC_CANDIDATE} ]]; then
+      log Setting up shell hooks and reloading shell ...
+      cat >>"${RC_CANDIDATE}" <<<"source <(${package} _carapace) # ${package}-installer"
+      cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
+      tail -2 "${RC_CANDIDATE}"
+      exec $SHELL
+    fi
+    log Please setup the following shell hooks:
+    log "source <(${package} _carapace)"
+    log "eval \"\$(direnv hook ${SHELLNAME})\""
+    ;;
+  zsh)
+    RC_CANDIDATE="${HOME}/.${SHELLNAME}rc"
+    if [[ -f ${RC_CANDIDATE} ]]; then
+      log Setting up shell hooks and reloading shell ...
+      cat >>"${RC_CANDIDATE}" <<<"source <(${package} _carapace) # ${package}-installer"
+      cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
+      tail -2 "${RC_CANDIDATE}"
+      exec $SHELL
+    fi
+    log Please setup the following shell hooks:
+    log "source <(${package} _carapace)"
+    log "eval \"\$(direnv hook ${SHELLNAME})\""
+    ;;
+  elvish)
+    RC_CANDIDATE="${XDG_CONFIG_HOME:-${HOME}/.config}/elvish/rc.elv"
+    if [[ -f ${RC_CANDIDATE} ]]; then
+      log Setting up shell hooks and reloading shell ...
+      cat >>"${RC_CANDIDATE}" <<<"eval (${package} _carapace | slurp) # ${package}-installer"
+      cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
+      tail -2 "${RC_CANDIDATE}"
+      exec $SHELL
+    fi
+    log Please setup the following shell hooks:
+    log "source <(${package} _carapace)"
+    log "eval \"\$(direnv hook ${SHELLNAME})\""
+    ;;
+  fish)
+    RC_CANDIDATE="${XDG_CONFIG_HOME:-${HOME}/.config}/fish/config.fish"
+    if [[ -f ${RC_CANDIDATE} ]]; then
+      log Setting up shell hooks and reloading shell ...
+      cat >>"${RC_CANDIDATE}" <<<"${package} _carapace | source # ${package}-installer"
+      cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
+      tail -2 "${RC_CANDIDATE}"
+      exec $SHELL
+    fi
+    log Please setup the following shell hooks:
+    log "source <(${package} _carapace)"
+    log "eval \"\$(direnv hook ${SHELLNAME})\""
+    ;;
+  *)
+    log Please setup the following shell hooks:
+    log "source <(${package} _carapace)"
+    log "eval \"\$(direnv hook ${SHELLNAME})\""
+    ;;
+  esac
+
+} # fully downloaded
+
