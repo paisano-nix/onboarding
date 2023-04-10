@@ -36,6 +36,14 @@ package="${PACKAGE:-paisano}"
       profile install "nixpkgs#direnv"
   fi
 
+  if ! command -v nom &>/dev/null; then
+    log Nom not found - installing ...
+    nix \
+      --experimental-feature nix-command \
+      --experimental-feature flakes \
+      profile install "nixpkgs#nix-output-monitor"
+  fi
+
   if ! grep 'experimental-features' ~/.config/nix/nix.conf &>/dev/null; then
     log Enable required experimental features in Nix ...
     cat >>~/.config/nix/nix.conf <<<"experimental-features = nix-command flakes"
