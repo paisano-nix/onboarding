@@ -39,6 +39,8 @@ package="${PACKAGE:-paisano}"
       profile install "nixpkgs#nix-output-monitor"
   fi
 
+  mkdir -p ~/.config/nix
+
   if ! grep 'experimental-features' ~/.config/nix/nix.conf &>/dev/null; then
     log Enable required experimental features in Nix ...
     cat >>~/.config/nix/nix.conf <<<"experimental-features = nix-command flakes"
