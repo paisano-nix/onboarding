@@ -76,6 +76,7 @@ package="${PACKAGE:-paisano}"
   bash)
     RC_CANDIDATE="${HOME}/.${SHELLNAME}rc"
     if [[ -f ${RC_CANDIDATE} ]]; then
+      cp -n ${RC_CANDIDATE} ${RC_CANDIDATE}.bak-before-${package}-installer
       log Setting up shell hooks and reloading shell ...
       cat >>"${RC_CANDIDATE}" <<<"source <(${package} _carapace) # ${package}-installer"
       cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
@@ -89,6 +90,7 @@ package="${PACKAGE:-paisano}"
   oil)
     RC_CANDIDATE="${HOME}/.${SHELLNAME}rc"
     if [[ -f ${RC_CANDIDATE} ]]; then
+      cp -n ${RC_CANDIDATE} ${RC_CANDIDATE}.bak-before-${package}-installer
       log Setting up shell hooks and reloading shell ...
       cat >>"${RC_CANDIDATE}" <<<"source <(${package} _carapace) # ${package}-installer"
       cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
@@ -102,6 +104,7 @@ package="${PACKAGE:-paisano}"
   zsh)
     RC_CANDIDATE="${HOME}/.${SHELLNAME}rc"
     if [[ -f ${RC_CANDIDATE} ]]; then
+      cp -n ${RC_CANDIDATE} ${RC_CANDIDATE}.bak-before-${package}-installer
       log Setting up shell hooks and reloading shell ...
       cat >>"${RC_CANDIDATE}" <<<"source <(${package} _carapace) # ${package}-installer"
       cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
@@ -115,6 +118,7 @@ package="${PACKAGE:-paisano}"
   elvish)
     RC_CANDIDATE="${XDG_CONFIG_HOME:-${HOME}/.config}/elvish/rc.elv"
     if [[ -f ${RC_CANDIDATE} ]]; then
+      cp -n ${RC_CANDIDATE} ${RC_CANDIDATE}.bak-before-${package}-installer
       log Setting up shell hooks and reloading shell ...
       cat >>"${RC_CANDIDATE}" <<<"eval (${package} _carapace | slurp) # ${package}-installer"
       cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
@@ -128,6 +132,7 @@ package="${PACKAGE:-paisano}"
   fish)
     RC_CANDIDATE="${XDG_CONFIG_HOME:-${HOME}/.config}/fish/config.fish"
     if [[ -f ${RC_CANDIDATE} ]]; then
+      cp -n ${RC_CANDIDATE} ${RC_CANDIDATE}.bak-before-${package}-installer
       log Setting up shell hooks and reloading shell ...
       cat >>"${RC_CANDIDATE}" <<<"${package} _carapace | source # ${package}-installer"
       cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
