@@ -23,25 +23,19 @@ package="${PACKAGE:-paisano}"
 
   if ! command -v ${package} &>/dev/null; then
     log "${package}" not found - installing ...
-    nix \
-      --experimental-feature nix-command \
-      --experimental-feature flakes \
+    nix --experimental-features "nix-command flakes" \
       profile install "github:${owner}/${repo}#${package}"
   fi
 
   if ! command -v direnv &>/dev/null; then
     log Direnv not found - installing ...
-    nix \
-      --experimental-feature nix-command \
-      --experimental-feature flakes \
+    nix --experimental-features "nix-command flakes" \
       profile install "nixpkgs#direnv"
   fi
 
   if ! command -v nom &>/dev/null; then
     log Nom not found - installing ...
-    nix \
-      --experimental-feature nix-command \
-      --experimental-feature flakes \
+    nix --experimental-features "nix-command flakes" \
       profile install "nixpkgs#nix-output-monitor"
   fi
 
