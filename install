@@ -61,7 +61,7 @@ package="${PACKAGE:-paisano}"
     log Please enter your github user name:
     read -rp 'GH User(handle): ' ghuser
     log Please enter your github user name:
-    read -rsp 'GH Private Access Token: ' ghpat
+    read -rsp 'GH Private Access Token (https://github.com/settings/tokens/new with full "repo" scope) :' ghpat
     cat >>~/.netrc <<<"machine github.com login ${ghuser} password ${ghpat}"
     cat >>~/.netrc <<<"machine api.github.com login ${ghuser} password ${ghpat}"
     cat >>~/.config/nix/nix.conf <<<"netrc-file = ${HOME}/.netrc)"
