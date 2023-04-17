@@ -9,17 +9,47 @@ owner="${OWNER:-paisano-nix}"
 repo="${REPO:-tui}"
 package="${PACKAGE:-paisano}"
 
+NETRC="$(realpath ~/.netrc)"
+
 { # Prevent execution if this script was only partially downloaded
 
   log() {
-    echo "[${package} installer] $*" >&2
+    echo "\x1b[1;33m[${package} installer]\x1b[0m $*" >&2
   }
+
+  setup_netrc() {
+    log To access potentially private repositories, we need to set up you netrc file, first
+    log "Current contents:"
+    log "$(cat ${NETRC})"
+    log Please enter your github user name:
+    read -rp 'GH User(handle): ' ghuser
+    log Please enter your github user name:
+    read -rsp 'GH Private Access Token (https://github.com/settings/tokens/new with full "repo" scope): ' ghpat
+    cat >>${NETRC} <<<"machine github.com login ${ghuser} password ${ghpat}"
+    cat >>${NETRC} <<<"machine api.github.com login ${ghuser} password ${ghpat}"
+    log "New contents:"
+    log "$(cat ${NETRC})"
+  }
+
+  mkdir -p ~/.config/nix
+  if ! grep 'netrc-file' ~/.config/nix/nix.conf; then
+    log Populate netrc file to access private repos ...
+  else
+    log Netrc file configured please validate ...
+    log Config: "$(grep 'netrc-file' ~/.config/nix/nix.conf)"
+  fi
 
   if ! command -v nix &>/dev/null; then
     log Nix not found - installing ...
-    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+    setup_netrc
+    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install \
+    --extra-config "${NETRC}"
     . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
-    echo "Don't forget to do this after the script ends ----^^^"
+  else if ! nix-show-config | grep 'netrc-file'; then
+    setup_netrc
+    cat >>~/.config/nix/nix.conf <<<"netrc-file = ${NETRC}"
+    log Netrc file configured please validate ...
+    log Config: "$(grep 'netrc-file' ~/.config/nix/nix.conf)"
   fi
 
   if ! command -v direnv &>/dev/null; then
@@ -30,22 +60,6 @@ package="${PACKAGE:-paisano}"
   if ! command -v nom &>/dev/null; then
     log Nom not found - installing ...
     nix profile install "nixpkgs#nix-output-monitor"
-  fi
-
-  mkdir -p ~/.config/nix
-
-  if ! grep 'netrc-file' ~/.config/nix/nix.conf; then
-    log Populate netrc file to access private repos ...
-    log Please enter your github user name:
-    read -rp 'GH User(handle): ' ghuser
-    log Please enter your github user name:
-    read -rsp 'GH Private Access Token (https://github.com/settings/tokens/new with full "repo" scope) :' ghpat
-    cat >>~/.netrc <<<"machine github.com login ${ghuser} password ${ghpat}"
-    cat >>~/.netrc <<<"machine api.github.com login ${ghuser} password ${ghpat}"
-    cat >>~/.config/nix/nix.conf <<<"netrc-file = ${HOME}/.netrc)"
-  else
-    log Netrc file configured please validate ...
-    log Config: "$(grep 'netrc-file' ~/.config/nix/nix.conf)"
   fi
 
   # this package is potentially privae so only install after netrc is set up
