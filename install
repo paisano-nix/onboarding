@@ -17,6 +17,8 @@ NETRC="$(realpath ~/.netrc)"
 		printf "\x1b[1;33m[%s installer]\x1b[0m %s\n" "${package}" "$*" >&2
 	}
 
+	trap 'log "To load nix, please run once: . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"' ERR
+
 	setup_netrc() (
 		log Set up netrc file for private repository access
 		[[ -f "${NETRC}" ]] && log "Current contents:" && cat "${NETRC}"
