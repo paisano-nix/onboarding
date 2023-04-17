@@ -60,78 +60,69 @@ package="${PACKAGE:-paisano}"
     RC_CANDIDATE="${HOME}/.${SHELLNAME}rc"
     if [[ -f ${RC_CANDIDATE} ]]; then
       cp -n ${RC_CANDIDATE} ${RC_CANDIDATE}.bak-before-${package}-installer
+      echo
       log Setting up shell hooks and reloading shell ...
       cat >>"${RC_CANDIDATE}" <<<"source <(${package} _carapace) # ${package}-installer"
       cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
       tail -2 "${RC_CANDIDATE}"
       exec $SHELL
     fi
-    log Please setup the following shell hooks:
-    log "source <(${package} _carapace)"
-    log "eval \"\$(direnv hook ${SHELLNAME})\""
+    echo
     ;;
   oil)
     RC_CANDIDATE="${HOME}/.${SHELLNAME}rc"
     if [[ -f ${RC_CANDIDATE} ]]; then
       cp -n ${RC_CANDIDATE} ${RC_CANDIDATE}.bak-before-${package}-installer
+      echo
       log Setting up shell hooks and reloading shell ...
       cat >>"${RC_CANDIDATE}" <<<"source <(${package} _carapace) # ${package}-installer"
       cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
       tail -2 "${RC_CANDIDATE}"
       exec $SHELL
     fi
-    log Please setup the following shell hooks:
-    log "source <(${package} _carapace)"
-    log "eval \"\$(direnv hook ${SHELLNAME})\""
     ;;
   zsh)
     RC_CANDIDATE="${HOME}/.${SHELLNAME}rc"
     if [[ -f ${RC_CANDIDATE} ]]; then
       cp -n ${RC_CANDIDATE} ${RC_CANDIDATE}.bak-before-${package}-installer
+      echo
       log Setting up shell hooks and reloading shell ...
       cat >>"${RC_CANDIDATE}" <<<"source <(${package} _carapace) # ${package}-installer"
       cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
       tail -2 "${RC_CANDIDATE}"
       exec $SHELL
     fi
-    log Please setup the following shell hooks:
-    log "source <(${package} _carapace)"
-    log "eval \"\$(direnv hook ${SHELLNAME})\""
     ;;
   elvish)
     RC_CANDIDATE="${XDG_CONFIG_HOME:-${HOME}/.config}/elvish/rc.elv"
     if [[ -f ${RC_CANDIDATE} ]]; then
       cp -n ${RC_CANDIDATE} ${RC_CANDIDATE}.bak-before-${package}-installer
+      echo
       log Setting up shell hooks and reloading shell ...
       cat >>"${RC_CANDIDATE}" <<<"eval (${package} _carapace | slurp) # ${package}-installer"
       cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
       tail -2 "${RC_CANDIDATE}"
       exec $SHELL
     fi
-    log Please setup the following shell hooks:
-    log "source <(${package} _carapace)"
-    log "eval \"\$(direnv hook ${SHELLNAME})\""
     ;;
   fish)
     RC_CANDIDATE="${XDG_CONFIG_HOME:-${HOME}/.config}/fish/config.fish"
     if [[ -f ${RC_CANDIDATE} ]]; then
       cp -n ${RC_CANDIDATE} ${RC_CANDIDATE}.bak-before-${package}-installer
+      echo
       log Setting up shell hooks and reloading shell ...
       cat >>"${RC_CANDIDATE}" <<<"${package} _carapace | source # ${package}-installer"
       cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
       tail -2 "${RC_CANDIDATE}"
       exec $SHELL
     fi
-    log Please setup the following shell hooks:
-    log "source <(${package} _carapace)"
-    log "eval \"\$(direnv hook ${SHELLNAME})\""
-    ;;
-  *)
-    log Please setup the following shell hooks:
-    log "source <(${package} _carapace)"
-    log "eval \"\$(direnv hook ${SHELLNAME})\""
     ;;
   esac
+
+  echo
+  log Please setup the following shell hooks:
+  log "source <(${package} _carapace)"
+  log "eval \"\$(direnv hook ${SHELLNAME})\""
 
 } # fully downloaded
 
