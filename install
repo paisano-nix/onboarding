@@ -22,11 +22,6 @@ package="${PACKAGE:-paisano}"
     echo "Don't forget to do this after the script ends ----^^^"
   fi
 
-  if ! command -v ${package} &>/dev/null; then
-    log "${package}" not found - installing ...
-    nix profile install "github:${owner}/${repo}#${package}"
-  fi
-
   if ! command -v direnv &>/dev/null; then
     log Direnv not found - installing ...
     nix profile install "nixpkgs#direnv"
@@ -51,6 +46,12 @@ package="${PACKAGE:-paisano}"
   else
     log Netrc file configured please validate ...
     log Config: "$(grep 'netrc-file' ~/.config/nix/nix.conf)"
+  fi
+
+  # this package is potentially privae so only install after netrc is set up
+  if ! command -v ${package} &>/dev/null; then
+    log "${package}" not found - installing ...
+    nix profile install "github:${owner}/${repo}#${package}"
   fi
 
   SHELLNAME="$(basename "${SHELL}")"
