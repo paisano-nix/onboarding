@@ -17,44 +17,27 @@ package="${PACKAGE:-paisano}"
 
   if ! command -v nix &>/dev/null; then
     log Nix not found - installing ...
-    sh <(curl -L https://nixos.org/nix/install) --no-daemon
-    source ~/.nix-profile/etc/profile.d/nix.sh
+    curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+    . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+    echo "Don't forget to do this after the script ends ----^^^"
   fi
 
   if ! command -v ${package} &>/dev/null; then
     log "${package}" not found - installing ...
-    nix --experimental-features "nix-command flakes" \
-      profile install "github:${owner}/${repo}#${package}"
+    nix profile install "github:${owner}/${repo}#${package}"
   fi
 
   if ! command -v direnv &>/dev/null; then
     log Direnv not found - installing ...
-    nix --experimental-features "nix-command flakes" \
-      profile install "nixpkgs#direnv"
+    nix profile install "nixpkgs#direnv"
   fi
 
   if ! command -v nom &>/dev/null; then
     log Nom not found - installing ...
-    nix --experimental-features "nix-command flakes" \
-      profile install "nixpkgs#nix-output-monitor"
+    nix profile install "nixpkgs#nix-output-monitor"
   fi
 
   mkdir -p ~/.config/nix
-
-  if ! grep 'experimental-features' ~/.config/nix/nix.conf &>/dev/null; then
-    log Enable required experimental features in Nix ...
-    cat >>~/.config/nix/nix.conf <<<"experimental-features = nix-command flakes"
-  else
-    if ! grep 'experimental-features' ~/.config/nix/nix.conf | grep 'nix-command' &>/dev/null; then
-      log Enable required experimental feature 'nix-command' in Nix ...
-      sed -i 's|experimental-features =|experimental-features = nix-command|g' ~/.config/nix/nix.conf
-    fi
-
-    if ! grep 'experimental-features' ~/.config/nix/nix.conf | grep 'flakes' &>/dev/null; then
-      log Enable required experimental feature 'flakes' in Nix ...
-      sed -i 's|experimental-features =|experimental-features = flakes|g' ~/.config/nix/nix.conf
-    fi
-  fi
 
   if ! grep 'netrc-file' ~/.config/nix/nix.conf; then
     log Populate netrc file to access private repos ...
