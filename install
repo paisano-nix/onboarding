@@ -37,13 +37,12 @@ NETRC="$(realpath ~/.netrc)"
 
 	if ! command -v nix &>/dev/null; then
 		log Nix not found - installing ...
-		setup_netrc
 		curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 		# shellcheck source=/dev/null
 		. '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
 	fi
 
-	if ! nix show-config | grep 'netrc-file' &>/dev/null; then
+	if ! grep 'netrc-file' ~/.config/nix/nix.conf &>/dev/null; then
 		setup_netrc
 		cat >>~/.config/nix/nix.conf <<<"netrc-file = ${NETRC}"
 		log Netrc file configured please validate ...
