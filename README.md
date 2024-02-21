@@ -18,7 +18,7 @@ export OWNER=my-github-org
 export REPO=my-repo
 export PACKAGE=my-branded-cli
 
-bash <(curl -L https://raw.githubusercontent.com/paisano-nix/onboarding/main/install)
+bash <(curl -L https://raw.githubusercontent.com/paisano-nix/Oonboarding/main/install)
 ```
 
 #### 3. Readme Instructions
@@ -36,3 +36,12 @@ bash <(curl -L https://raw.githubusercontent.com/<myorg>/<myrepo>/<branch>/insta
 <mypackage>
 ```
 ``````
+
+#### 4. Tips and Tricks
+
+You can use GH Pages to host your scrit and prettify the instruction to:
+
+```console
+bash <(curl -L https://<myorg>.github.io/<myrepo>/install)
+
+```
