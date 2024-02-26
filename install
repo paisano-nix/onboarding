@@ -24,7 +24,7 @@ NETRC="$(realpath ~/.netrc)"
 		[[ -f "${NETRC}" ]] && log "Current contents:" && cat "${NETRC}"
 		log Please enter your github user name:
 		read -rp 'GH User(handle): ' ghuser
-		log Please enter your github user name:
+		log Please enter your github private access token:
 		read -rsp 'GH Private Access Token (https://github.com/settings/tokens/new with full "repo" scope): ' ghpat
 		cat >>"${NETRC}" <<<"machine github.com login ${ghuser} password ${ghpat}"
 		cat >>"${NETRC}" <<<"machine api.github.com login ${ghuser} password ${ghpat}"
