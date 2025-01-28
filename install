@@ -10,12 +10,25 @@ repo="${REPO:-tui}"
 package="${PACKAGE:-paisano}"
 
 NETRC="$(realpath ~/.netrc)"
+GREEN='\033[1;32m'
+NC='\033[0m'
 
 { # Prevent execution if this script was only partially downloaded
 
 	log() {
 		printf "\x1b[1;33m[%s installer]\x1b[0m %s\n" "${package}" "$*" >&2
 	}
+
+	confirm() {
+		echo
+		printf "\x1b[1;33m[%s installer]\x1b[0m ${GREEN}%s${NC} [n/Y] " "${package}" "$1"
+		read -r response
+		case "$response" in
+			[nN][oO]|[nN]) return 1 ;;
+			*) return 0 ;;
+		esac
+	}
+
 
 	trap '! test command -v nix &>/dev/null && log "To load nix, please run once: . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh"' ERR
 
@@ -33,105 +46,92 @@ NETRC="$(realpath ~/.netrc)"
 		cat "${NETRC}"
 	)
 
-	mkdir -p ~/.config/nix
-
 	if ! command -v nix &>/dev/null; then
-		log Nix not found - installing ...
-		# trusted-users = $(whoami) allows to accept a flake's `nixConfig`
-		curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- \
-		  install --extra-conf "trusted-users = $(whoami)"
-		# shellcheck source=/dev/null
-		. '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+		if confirm "nix not found. Do you want to install it?"; then
+			log mkdir -p ~/.config/nix
+			mkdir -p ~/.config/nix
+			log curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- \
+			  install --extra-conf "trusted-users = $(whoami)"
+			# trusted-users = $(whoami) allows to accept a flake's `nixConfig`
+			curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- \
+			  install --extra-conf "trusted-users = $(whoami)"
+			log . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+			# shellcheck source=/dev/null
+			. '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+		fi
 	fi
 
 	if ! grep 'netrc-file' ~/.config/nix/nix.conf &>/dev/null; then
-		setup_netrc
-		cat >>~/.config/nix/nix.conf <<<"netrc-file = ${NETRC}"
-		log Netrc file configured please validate ...
-		log Config: "$(grep 'netrc-file' ~/.config/nix/nix.conf /dev/null)"
+		if confirm "Do you want to configure netrc file? — Used to prevent rate-limiting and for private repository access."; then
+			setup_netrc
+			cat >>~/.config/nix/nix.conf <<<"netrc-file = ${NETRC}"
+			log Netrc file configured please validate ...
+			log Config: "$(grep 'netrc-file' ~/.config/nix/nix.conf /dev/null)"
+		fi
 	fi
 
 	if ! command -v direnv &>/dev/null; then
-		log Direnv not found - installing ...
-		log nix profile install "nixpkgs#direnv"
-		nix profile install "nixpkgs#direnv"
+		if confirm "direnv not found. Do you want to install it? — Used to manage isolated per-folder development environments."; then
+			log nix profile install "nixpkgs#direnv"
+			nix profile install "nixpkgs#direnv"
+		fi
 	fi
 
 	if ! command -v nom &>/dev/null; then
-		log Nom not found - installing ...
-		log nix profile install "nixpkgs#nix-output-monitor"
-		nix profile install "nixpkgs#nix-output-monitor"
+		if confirm "nom not found. Do you want to install it? — Used to embellish nix output (optional)."; then
+			log nix profile install "nixpkgs#nix-output-monitor"
+			nix profile install "nixpkgs#nix-output-monitor"
+		fi
 	fi
 
-	# this package is potentially privae so only install after netrc is set up
+	# this package is potentially private so only install after netrc is set up
 	if ! command -v "${package}" &>/dev/null; then
-		log "${package}" not found - installing ...
-		log nix profile install --accept-flake-config "github:${owner}/${repo}#${package}"
-		nix profile install --accept-flake-config "github:${owner}/${repo}#${package}"
+		if confirm "${package} not found. Do you want to install it? — Used as project-specific driver tool."; then
+			log nix profile install --accept-flake-config "github:${owner}/${repo}#${package}"
+			nix profile install --accept-flake-config "github:${owner}/${repo}#${package}"
+		fi
 	fi
 
 	SHELLNAME="$(basename "${SHELL}")"
 
 	case $SHELLNAME in
-	bash)
+	bash|oil|zsh)
 		RC_CANDIDATE="${HOME}/.${SHELLNAME}rc"
-		if [[ -f ${RC_CANDIDATE} ]]; then
-			cp -n "${RC_CANDIDATE}" "${RC_CANDIDATE}.bak-before-${package}-installer"
-			log Setting up shell hooks and reloading shell ...
-			cat >>"${RC_CANDIDATE}" <<<"source <(${package} _carapace) # ${package}-installer"
-			cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
-			tail -2 "${RC_CANDIDATE}"
-			exec $SHELL
-		fi
-		echo
-		;;
-	oil)
-		RC_CANDIDATE="${HOME}/.${SHELLNAME}rc"
-		if [[ -f ${RC_CANDIDATE} ]]; then
-			cp -n "${RC_CANDIDATE}" "${RC_CANDIDATE}.bak-before-${package}-installer"
-			log Setting up shell hooks and reloading shell ...
-			cat >>"${RC_CANDIDATE}" <<<"source <(${package} _carapace) # ${package}-installer"
-			cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
-			tail -2 "${RC_CANDIDATE}"
-			exec $SHELL
-		fi
-		;;
-	zsh)
-		RC_CANDIDATE="${HOME}/.${SHELLNAME}rc"
-		if [[ -f ${RC_CANDIDATE} ]]; then
-			cp -n "${RC_CANDIDATE}" "${RC_CANDIDATE}.bak-before-${package}-installer"
-			log Setting up shell hooks and reloading shell ...
-			cat >>"${RC_CANDIDATE}" <<<"source <(${package} _carapace) # ${package}-installer"
-			cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
-			tail -2 "${RC_CANDIDATE}"
-			exec $SHELL
-		fi
 		;;
 	elvish)
 		RC_CANDIDATE="${XDG_CONFIG_HOME:-${HOME}/.config}/elvish/rc.elv"
-		if [[ -f ${RC_CANDIDATE} ]]; then
-			cp -n "${RC_CANDIDATE}" "${RC_CANDIDATE}.bak-before-${package}-installer"
-			log Setting up shell hooks and reloading shell ...
-			cat >>"${RC_CANDIDATE}" <<<"eval (${package} _carapace | slurp) # ${package}-installer"
-			cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
-			tail -2 "${RC_CANDIDATE}"
-			exec $SHELL
-		fi
 		;;
 	fish)
 		RC_CANDIDATE="${XDG_CONFIG_HOME:-${HOME}/.config}/fish/config.fish"
-		if [[ -f ${RC_CANDIDATE} ]]; then
-			cp -n "${RC_CANDIDATE}" "${RC_CANDIDATE}.bak-before-${package}-installer"
-			log Setting up shell hooks and reloading shell ...
-			cat >>"${RC_CANDIDATE}" <<<"${package} _carapace | source # ${package}-installer"
-			cat >>"${RC_CANDIDATE}" <<<"eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer"
-			tail -2 "${RC_CANDIDATE}"
-			exec $SHELL
-		fi
+		;;
+	*)
+		RC_CANDIDATE=
 		;;
 	esac
-	log Please setup the following shell hooks:
-	log "source <(${package} _carapace)"
-	log "eval \"\$(direnv hook ${SHELLNAME})\""
+
+	if [[ -n "$RC_CANDIDATE" && -f ${RC_CANDIDATE} ]]; then
+		if confirm "Do you want to set up shell hooks and reload the shell?"; then
+			log cp -n "${RC_CANDIDATE}" "${RC_CANDIDATE}.bak-before-${package}-installer"
+			cp -n "${RC_CANDIDATE}" "${RC_CANDIDATE}.bak-before-${package}-installer"
+			log Setting up shell hooks and reloading shell ...
+			if [[ "${SHELLNAME}" == "fish" ]]; then
+				echo "${package} _carapace | source # ${package}-installer" >> "${RC_CANDIDATE}"
+			elif [[ "${SHELLNAME}" == "elvish" ]]; then
+				echo "eval (${package} _carapace | slurp) # ${package}-installer" >> "${RC_CANDIDATE}"
+			else
+				echo "source <(${package} _carapace) # ${package}-installer" >> "${RC_CANDIDATE}"
+			fi
+			echo "eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer" >> "${RC_CANDIDATE}"
+			tail -2 "${RC_CANDIDATE}"
+			log "exec $SHELL"
+			exec $SHELL
+		fi
+	else
+		echo
+		log "Shell configuration file not found: ${RC_CANDIDATE:-undetected shell}"
+		log "Please setup the following shell hooks manually according to your shell:"
+		log "source <(${package} _carapace)"
+		log "eval \"\$(direnv hook ${SHELLNAME})\""
+	fi
 
 } # fully downloaded
