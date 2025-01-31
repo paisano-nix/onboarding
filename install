@@ -62,7 +62,7 @@ NC='\033[0m'
 	fi
 
 	if ! grep 'netrc-file' ~/.config/nix/nix.conf &>/dev/null; then
-		if confirm "Do you want to configure netrc file? — Used to prevent rate-limiting and for private repository access."; then
+		if confirm "Do you want to configure netrc file (optional)? — Used to prevent rate-limiting and for private repository access."; then
 			setup_netrc
 			cat >>~/.config/nix/nix.conf <<<"netrc-file = ${NETRC}"
 			log Netrc file configured please validate ...
@@ -78,7 +78,7 @@ NC='\033[0m'
 	fi
 
 	if ! command -v nom &>/dev/null; then
-		if confirm "nom not found. Do you want to install it? — Used to embellish nix output (optional)."; then
+		if confirm "nom not found. Do you want to install it (optional)? — Used to embellish nix output."; then
 			log nix profile install "nixpkgs#nix-output-monitor"
 			nix profile install "nixpkgs#nix-output-monitor"
 		fi
