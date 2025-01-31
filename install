@@ -51,10 +51,10 @@ NC='\033[0m'
 			log mkdir -p ~/.config/nix
 			mkdir -p ~/.config/nix
 			log curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- \
-			  install --extra-conf "trusted-users = $(whoami)"
+			  install --extra-conf "trusted-users = $(whoami)" --no-confirm
 			# trusted-users = $(whoami) allows to accept a flake's `nixConfig`
 			curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- \
-			  install --extra-conf "trusted-users = $(whoami)"
+			  install --extra-conf "trusted-users = $(whoami)" --no-confirm
 			log . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
 			# shellcheck source=/dev/null
 			. '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
