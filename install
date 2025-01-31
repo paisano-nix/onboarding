@@ -134,7 +134,7 @@ NC='\033[0m'
 	fi
 	log "You're almost onboarded onto Nix."
 	log	"To activate the new shell hooks (Nix & Direnv), please restart your shell."
-	log "Restart shell: $SHEL"
+	log "Restart shell: $SHELL"
 	if [ $# -ne 0 ]; then
 		log	"Then, continue with: $*"
 	fi
