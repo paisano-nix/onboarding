@@ -110,7 +110,7 @@ NC='\033[0m'
 	esac
 
 	if [[ -n "$RC_CANDIDATE" && -f ${RC_CANDIDATE} ]]; then
-		if confirm "Do you want to set up shell hooks and reload the shell?"; then
+		if confirm "Do you want to set up shell hooks?"; then
 			log cp -n "${RC_CANDIDATE}" "${RC_CANDIDATE}.bak-before-${package}-installer"
 			cp -n "${RC_CANDIDATE}" "${RC_CANDIDATE}.bak-before-${package}-installer"
 			log Setting up shell hooks and reloading shell ...
@@ -122,9 +122,8 @@ NC='\033[0m'
 				echo "source <(${package} _carapace) # ${package}-installer" >> "${RC_CANDIDATE}"
 			fi
 			echo "eval \"\$(direnv hook ${SHELLNAME})\" # ${package}-installer" >> "${RC_CANDIDATE}"
+			log "These lines where added to the end of ${RC_CANDIDATE}"
 			tail -2 "${RC_CANDIDATE}"
-			log "exec $SHELL"
-			exec $SHELL
 		fi
 	else
 		echo
@@ -132,6 +131,12 @@ NC='\033[0m'
 		log "Please setup the following shell hooks manually according to your shell:"
 		log "source <(${package} _carapace)"
 		log "eval \"\$(direnv hook ${SHELLNAME})\""
+	fi
+	log "You're almost onboarded onto Nix."
+	log	"To activate the new shell hooks (Nix & Direnv), please restart your shell."
+	log "Restart shell: $SHEL"
+	if [ $# -ne 0 ]; then
+		log	"Then, continue with: $*"
 	fi
 
 } # fully downloaded
